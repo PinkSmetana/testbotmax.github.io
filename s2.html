@@ -28,66 +28,60 @@
   </div>
 
   <script>
-    // Базовый URL и токен для всех запросов
-    const API_URL = 'https://platform-api.max.ru/messages';
-    const TOKEN   = 'f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk';
+    document.addEventListener('DOMContentLoaded', () => {
+      // Базовый URL для сообщений и ваш токен (ASCII-only!)
+      const API_URL = 'https://platform-api.max.ru/messages';
+      const TOKEN   = 'f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk'; // без BOM, кириллицы и пробелов по краям
 
-    // Получаем chat_id из URL
-    const params  = new URLSearchParams(window.location.search);
-    const CHAT_ID = params.get('chat_id') || '';
+      // Получаем chat_id из параметров URL
+      const params  = new URLSearchParams(window.location.search);
+      const CHAT_ID = params.get('chat_id') || '';
 
-    // Тексты запросов
-    const TEXTS = {
-      about:     'Расскажите об университете',
-      faculties: 'Какие есть факультеты',
-      admission: 'Условия поступления',
-      contacts:  'Контактная информация университета'
-    };
+      // Предопределённые тексты для отправки
+      const TEXTS = {
+        about:     'Расскажите об университете',
+        faculties: 'Какие есть факультеты',
+        admission: 'Условия поступления',
+        contacts:  'Контактная информация университета'
+      };
 
-    /**
-     * Отправка POST-запроса на https://platform-api.max.ru/messages
-     * Метод: POST — создать ресурс Message
-     * Заголовки:
-     *   Content-Type: application/json
-     *   Authorization: <token>
-     * Тело: { chat_id, text }
-     */
-    async function sendToChat(key) {
-      const message = TEXTS[key];
-      const respEl  = document.getElementById('response');
-      respEl.textContent = 'Отправляем запрос в чат...';
+      // Функция отправки POST-запроса
+      async function sendToChat(key) {
+        const message = TEXTS[key];
+        const respEl  = document.getElementById('response');
+        respEl.textContent = 'Отправляем запрос в чат...';
 
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': TOKEN
-          },
-          body: JSON.stringify({
-            chat_id: CHAT_ID,
-            text: message
-          })
-        });
-        const data = await res.json();
+        try {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: new Headers({
+              'Content-Type': 'application/json; charset=utf-8',
+              'Authorization': TOKEN
+            }),
+            body: JSON.stringify({
+              chat_id: CHAT_ID,
+              text: message
+            })
+          });
 
-        if (res.ok) {
-          respEl.textContent = 'Сообщение отправлено. Откройте чат, чтобы увидеть ответ бота.';
-        } else {
-          // Пример ошибки: { error: "Описание ошибки" }
-          throw new Error(data.error || JSON.stringify(data));
+          const data = await response.json();
+          if (response.ok) {
+            respEl.textContent = 'Сообщение отправлено. Откройте чат для ответа бота.';
+          } else {
+            // Сервер может вернуть { "error": "..." }
+            throw new Error(data.error || JSON.stringify(data));
+          }
+        } catch (err) {
+          respEl.textContent = 'Ошибка отправки: ' + err.message;
         }
-      } catch (err) {
-        respEl.textContent = 'Ошибка отправки: ' + err.message;
       }
-    }
 
-    // Обработчики кнопок
-    document.getElementById('btn-about')    .addEventListener('click', () => sendToChat('about'));
-    document.getElementById('btn-faculties').addEventListener('click', () => sendToChat('faculties'));
-    document.getElementById('btn-admission').addEventListener('click', () => sendToChat('admission'));
-    document.getElementById('btn-contacts') .addEventListener('click', () => sendToChat('contacts'));
+      // Навешиваем события на кнопки
+      document.getElementById('btn-about')    .addEventListener('click', () => sendToChat('about'));
+      document.getElementById('btn-faculties').addEventListener('click', () => sendToChat('faculties'));
+      document.getElementById('btn-admission').addEventListener('click', () => sendToChat('admission'));
+      document.getElementById('btn-contacts') .addEventListener('click', () => sendToChat('contacts'));
+    });
   </script>
 </body>
 </html>
-
