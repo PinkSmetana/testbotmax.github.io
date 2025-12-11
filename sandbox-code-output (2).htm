@@ -1,0 +1,72 @@
+<!DOCTYPE html><html><body>
+<div class="button-container">
+  <button class="user-button" data-command="привет">Привет</button>
+  <button class="user-button" data-command="об универе">Об универе</button>
+  <button class="user-button" data-command="факультеты">Факультеты</button>
+  <button class="user-button" data-command="поступление">Поступление</button>
+  <button class="user-button" data-command="контакты">Контакты</button>
+</div>
+</body>
+
+<style>
+// CSS for styling buttons
+const buttonsCSS = `
+<style>
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.user-button {
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.user-button:hover {
+  background-color: #0056b3;
+}
+</style>
+</style>
+
+<script>
+// MAX Messenger Bot Template for University with HTML/CSS buttons
+const MAXBot = require('max-messenger-bot');
+const bot = new MAXBot({
+    token: 'f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk'
+});
+
+bot.on('message', async (ctx) => {
+    const text = ctx.message.text.trim().toLowerCase();
+    let replyText = '';
+    switch (text) {
+        case 'привет':
+            replyText = 'Здравствуйте! Я бот Университета. Чем могу помочь?';
+            break;
+        case 'об универе':
+            replyText = 'Наш университет — один из ведущих вузов страны, основан в 19XX году. Мы предлагаем современное образование и научные исследования.';
+            break;
+        case 'факультеты':
+            replyText = 'У нас есть факультеты: инженерный, гуманитарный, естественных наук, экономический и медицинский.';
+            break;
+        case 'поступление':
+            replyText = 'Для поступления необходимо сдать ЕГЭ по профильным предметам, подать заявление через портал и предоставить копии документов до 1 августа.';
+            break;
+        case 'контакты':
+            replyText = 'Адрес: ул. Университетская, д.1. Телефон: +7 123 456-78-90. Email: info@university.ru';
+            break;
+        default:
+            replyText = 'Извините, не понял запрос. Пожалуйста, выберите одну из кнопок ниже.';
+    }
+    await ctx.reply(`${replyText}\n\n${buttonsCSS}\n${buttonsHTML}`, { parse_mode: 'HTML' });
+});
+
+bot.launch().then(() => {
+    console.log('University bot is up and running.');
+});
+</script></html>
