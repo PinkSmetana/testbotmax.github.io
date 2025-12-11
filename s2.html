@@ -6,8 +6,10 @@
   <title>Университетский чат-бот на MAX</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; text-align: center; }
-    #app { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
-    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    #app { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 8px;
+           box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
+    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0;
+           border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
     #btn-about     { background: #0073e6; color: #fff; }
     #btn-faculties { background: #28a745; color: #fff; }
     #btn-admission { background: #ffc107; color: #333; }
@@ -26,13 +28,15 @@
   </div>
 
   <script>
-    // Константы для работы с API
-    const API_URL = 'https://platform-api.max.ru/v1/messages/send';
-    const TOKEN   = 'f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk';
+    // Базовый URL и токен для всех запросов
+    const API_URL = 'https://platform-api.max.ru/messages';
+    const TOKEN   = 'ВАШ_ТОКЕН_ДОСТУПА';
+
+    // Получаем chat_id из URL
     const params  = new URLSearchParams(window.location.search);
     const CHAT_ID = params.get('chat_id') || '';
 
-    // Тексты для отправки
+    // Тексты запросов
     const TEXTS = {
       about:     'Расскажите об университете',
       faculties: 'Какие есть факультеты',
@@ -40,7 +44,14 @@
       contacts:  'Контактная информация университета'
     };
 
-    // Отправка сообщения в чат через platform-api.max.ru
+    /**
+     * Отправка POST-запроса на https://platform-api.max.ru/messages
+     * Метод: POST — создать ресурс Message
+     * Заголовки:
+     *   Content-Type: application/json
+     *   Authorization: <token>
+     * Тело: { chat_id, text }
+     */
     async function sendToChat(key) {
       const message = TEXTS[key];
       const respEl  = document.getElementById('response');
@@ -51,7 +62,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${TOKEN}`
+            'Authorization': TOKEN
           },
           body: JSON.stringify({
             chat_id: CHAT_ID,
@@ -60,9 +71,10 @@
         });
         const data = await res.json();
 
-        if (res.ok && data.success) {
-          respEl.textContent = 'Сообщение отправлено. Перейдите в чат, чтобы получить ответ.';
+        if (res.ok) {
+          respEl.textContent = 'Сообщение отправлено. Откройте чат, чтобы увидеть ответ бота.';
         } else {
+          // Пример ошибки: { error: "Описание ошибки" }
           throw new Error(data.error || JSON.stringify(data));
         }
       } catch (err) {
@@ -70,11 +82,11 @@
       }
     }
 
-    // Привязка кнопок
-    document.getElementById('btn-about').addEventListener('click',     () => sendToChat('about'));
+    // Обработчики кнопок
+    document.getElementById('btn-about')    .addEventListener('click', () => sendToChat('about'));
     document.getElementById('btn-faculties').addEventListener('click', () => sendToChat('faculties'));
     document.getElementById('btn-admission').addEventListener('click', () => sendToChat('admission'));
-    document.getElementById('btn-contacts').addEventListener('click',  () => sendToChat('contacts'));
+    document.getElementById('btn-contacts') .addEventListener('click', () => sendToChat('contacts'));
   </script>
 </body>
 </html>
