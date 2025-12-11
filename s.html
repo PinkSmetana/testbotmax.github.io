@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Университетский чат-бот</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    #app {
+      max-width: 400px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    #btn-about    { background: #0073e6; color: #fff; }
+    #btn-faculties{ background: #28a745; color: #fff; }
+    #btn-admission{ background: #ffc107; color: #333; }
+    #btn-contacts { background: #dc3545; color: #fff; }
+    #response {
+      min-height: 80px;
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fafafa;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h2>Университетский чат-бот</h2>
+    <button id="btn-about"    class="btn">Об университете</button>
+    <button id="btn-faculties"class="btn">Факультеты</button>
+    <button id="btn-admission"class="btn">Поступление</button>
+    <button id="btn-contacts" class="btn">Контакты</button>
+    <div id="response">Здесь будет ответ бота...</div>
+  </div>
+
+  <script>
+    // Задайте ваш токен и URL API MAX-мессенджера
+    const TOKEN   = 'f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk';
+    const API_URL = 'https://api.max-messenger.com/v1/messages';
+
+    // Определяем ID чата (можно передавать через GET-параметр chat_id)
+    const params = new URLSearchParams(window.location.search);
+    const CHAT_ID = params.get('chat_id') || 'DEFAULT_CHAT_ID';
+
+    // Функция отправки запроса боту
+    async function sendToBot(text) {
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${TOKEN}`
+          },
+          body: JSON.stringify({
+            recipient: { id: CHAT_ID },
+            message:   { text: text }
+          })
+        });
+        const data = await res.json();
+        // Предполагаем, что API возвращает { reply: "..." }
+        document.getElementById('response').textContent = data.reply || 'Нет ответа от бота.';
+      } catch (e) {
+        document.getElementById('response').textContent = 'Ошибка соединения: ' + e.message;
+      }
+    }
+
+    // Назначаем обработчики кнопок
+    document.getElementById('btn-about').onclick     = () => sendToBot('Расскажите об университете');
+    document.getElementById('btn-faculties').onclick = () => sendToBot('Какие есть факультеты');
+    document.getElementById('btn-admission').onclick = () => sendToBot('Условия поступления');
+    document.getElementById('btn-contacts').onclick  = () => sendToBot('Контактная информация университета');
+  </script>
+</body>
+</html>
