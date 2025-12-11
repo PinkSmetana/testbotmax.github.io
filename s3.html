@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Университетский чат-бот на MAX</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; text-align: center; }
+    #app { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
+    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
+    .btn:hover { opacity: 0.9; }
+    #btn-about     { background: #0073e6; color: #fff; }
+    #btn-faculties { background: #28a745; color: #fff; }
+    #btn-admission { background: #ffc107; color: #333; }
+    #btn-contacts  { background: #dc3545; color: #fff; }
+    #response { min-height: 100px; margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; text-align: left; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h2>Университетский чат-бот</h2>
+    <button id="btn-about"     class="btn">Об университете</button>
+    <button id="btn-faculties" class="btn">Факультеты</button>
+    <button id="btn-admission" class="btn">Поступление</button>
+    <button id="btn-contacts"  class="btn">Контакты</button>
+    <div id="response">Нажмите кнопку, чтобы отправить запрос.</div>
+  </div>
+
+  <script>
+    // Получаем chat_id из параметров URL
+    const params  = new URLSearchParams(window.location.search);
+    const CHAT_ID = params.get('chat_id') || '';
+
+    // Заранее определённые ответы бота
+    const ANSWERS = {
+      about: `Наш университет основан в 1950 году. Мы предлагаем более 100 программ бакалавриата и магистратуры, активно участвуем в международных проектах и исследованиях. Наши выпускники востребованы на рынке труда и работают в ведущих компаниях мира.`,
+      faculties: `В нашем университете действуют следующие факультеты:\n
+1. Факультет инженерии и информационных технологий\n
+2. Факультет экономики и управления\n
+3. Факультет гуманитарных наук\n
+4. Физико-математический факультет\n
+5. Медицинский факультет\n`,
+      admission: `Условия поступления:\n
+• Бакалавриат: 9 классов + вступительные экзамены по профильным предметам.\n
+• Магистратура: диплом бакалавра + результаты вступительных испытаний или GRE/GMAT.\n
+• Иностранные студенты: знание русского или английского языка на уровне B2.\n
+• Срок подачи документов: с 1 июня по 15 августа.`,
+      contacts: `Контактная информация:\n
+Адрес: г. Москва, пр. Академика Королёва, д.12\n
+Телефон приёмной комиссии: +7 (495) 123-45-67\n
+E-mail: admissions@university.ru\n
+Время работы: Пн–Пт, 9:00–18:00 (МСК)`
+    };
+
+    // Универсальная функция: отправляет текст в чат MAX и показывает ответ локально
+    function handleQuestion(key) {
+      const textMap = {
+        about: 'Расскажите об университете',
+        faculties: 'Какие есть факультеты',
+        admission: 'Условия поступления',
+        contacts: 'Контактная информация университета'
+      };
+      const userText = textMap[key];
+      const botReply = ANSWERS[key];
+      document.getElementById('response').textContent = 'Отправляем запрос в чат...';
+
+      // Отправка в чат через MAX SDK или postMessage
+      if (window.MAX && typeof MAX.sendMessage === 'function') {
+        MAX.sendMessage({ chat_id: CHAT_ID, text: userText });
+      } else {
+        window.parent.postMessage({ type: 'MAX_SEND_MESSAGE', chat_id: CHAT_ID, text: userText }, '*');
+      }
+
+      // Показ локального ответа (имитация ответа в чате)
+      setTimeout(() => {
+        document.getElementById('response').textContent = botReply;
+      }, 500);
+    }
+
+    // Привязываем кнопки к обработчику
+    document.getElementById('btn-about').addEventListener('click',     () => handleQuestion('about'));
+    document.getElementById('btn-faculties').addEventListener('click', () => handleQuestion('faculties'));
+    document.getElementById('btn-admission').addEventListener('click', () => handleQuestion('admission'));
+    document.getElementById('btn-contacts').addEventListener('click',  () => handleQuestion('contacts'));
+  </script>
+</body>
+</html>
