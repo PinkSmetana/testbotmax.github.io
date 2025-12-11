@@ -7,13 +7,12 @@
   <style>
     body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; text-align: center; }
     #app { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
-    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
-    .btn:hover { opacity: 0.9; }
+    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
     #btn-about     { background: #0073e6; color: #fff; }
     #btn-faculties { background: #28a745; color: #fff; }
     #btn-admission { background: #ffc107; color: #333; }
     #btn-contacts  { background: #dc3545; color: #fff; }
-    #response { min-height: 80px; margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; text-align: left; white-space: pre-wrap; }
+    #response { margin-top: 20px; color: #555; }
   </style>
 </head>
 <body>
@@ -23,56 +22,37 @@
     <button id="btn-faculties" class="btn">Факультеты</button>
     <button id="btn-admission" class="btn">Поступление</button>
     <button id="btn-contacts"  class="btn">Контакты</button>
-    <div id="response">Здесь будет ответ бота...</div>
+    <div id="response">Нажмите кнопку, чтобы отправить запрос в чат.</div>
   </div>
 
   <script>
-    const TOKEN   = 'f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk';
     const params  = new URLSearchParams(window.location.search);
-    const CHAT_ID = params.get('chat_id') || 'DEFAULT_CHAT_ID';
+    const CHAT_ID = params.get('chat_id') || '';
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const respEl = document.getElementById('response');
+    const TEXTS = {
+      about:     'Расскажите об университете',
+      faculties: 'Какие есть факультеты',
+      admission: 'Условия поступления',
+      contacts:  'Контактная информация университета'
+    };
 
-      if (typeof MAX === 'undefined' || !MAX.api || typeof MAX.api.sendMessage !== 'function') {
-        respEl.textContent = 'Ошибка: MAX API недоступно. Убедитесь, что вы открыли приложение внутри MAX-мессенджера.';
-        return;
+    function sendToChat(key) {
+      const text = TEXTS[key];
+      document.getElementById('response').textContent = 'Отправляем запрос в чат...';
+
+      if (window.MAX && typeof MAX.sendMessage === 'function') {
+        MAX.sendMessage({ chat_id: CHAT_ID, text: text });
+      } else {
+        window.parent.postMessage({ type: 'MAX_SEND_MESSAGE', chat_id: CHAT_ID, text: text }, '*');
       }
 
-      function sendToBot(text) {
-        respEl.textContent = 'Отправка запроса...';
-        // Если SDK возвращает Promise
-        const result = MAX.api.sendMessage({ token: TOKEN, chat_id: CHAT_ID, text: text });
-        if (result && typeof result.then === 'function') {
-          result
-            .then(response => {
-              const reply = response.reply || response.data?.reply || 'Бот ничего не прислал.';
-              respEl.textContent = reply;
-            })
-            .catch(err => {
-              respEl.textContent = 'Ошибка соединения: ' + (err.message || JSON.stringify(err));
-            });
-        } else {
-          // Если SDK использует callback (err, res)
-          MAX.api.sendMessage(
-            { token: TOKEN, chat_id: CHAT_ID, text: text },
-            function(err, response) {
-              if (err) {
-                respEl.textContent = 'Ошибка соединения: ' + (err.message || JSON.stringify(err));
-              } else {
-                const reply = response.reply || response.data?.reply || 'Бот ничего не прислал.';
-                respEl.textContent = reply;
-              }
-            }
-          );
-        }
-      }
+      document.getElementById('response').textContent = 'Сообщение отправлено в чат.';
+    }
 
-      document.getElementById('btn-about').addEventListener('click',     () => sendToBot('Расскажите об университете'));
-      document.getElementById('btn-faculties').addEventListener('click', () => sendToBot('Какие есть факультеты'));
-      document.getElementById('btn-admission').addEventListener('click', () => sendToBot('Условия поступления'));
-      document.getElementById('btn-contacts').addEventListener('click',  () => sendToBot('Контактная информация университета'));
-    });
+    document.getElementById('btn-about').addEventListener('click',     () => sendToChat('about'));
+    document.getElementById('btn-faculties').addEventListener('click', () => sendToChat('faculties'));
+    document.getElementById('btn-admission').addEventListener('click', () => sendToChat('admission'));
+    document.getElementById('btn-contacts').addEventListener('click',  () => sendToChat('contacts'));
   </script>
 </body>
 </html>
