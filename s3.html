@@ -6,14 +6,15 @@
   <title>Университетский чат-бот на MAX</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; text-align: center; }
-    #app { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
-    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
-    .btn:hover { opacity: 0.9; }
+    #app { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 8px;
+           box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
+    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0;
+           border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
     #btn-about     { background: #0073e6; color: #fff; }
     #btn-faculties { background: #28a745; color: #fff; }
     #btn-admission { background: #ffc107; color: #333; }
     #btn-contacts  { background: #dc3545; color: #fff; }
-    #response { min-height: 100px; margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; text-align: left; white-space: pre-wrap; }
+    #response { margin-top: 20px; color: #555; }
   </style>
 </head>
 <body>
@@ -23,65 +24,61 @@
     <button id="btn-faculties" class="btn">Факультеты</button>
     <button id="btn-admission" class="btn">Поступление</button>
     <button id="btn-contacts"  class="btn">Контакты</button>
-    <div id="response">Нажмите кнопку, чтобы отправить запрос.</div>
+    <div id="response">Нажмите кнопку, чтобы отправить запрос в чат.</div>
   </div>
 
   <script>
-    // Получаем chat_id из параметров URL
-    const params  = new URLSearchParams(window.location.search);
-    const CHAT_ID = params.get('chat_id') || '';
+    document.addEventListener('DOMContentLoaded', () => {
+      // API и токен (только ASCII, без BOM и пробелов по краям)
+      const API_URL = 'https://platform-api.max.ru/messages';
+      const TOKEN   = 'f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk';
 
-    // Заранее определённые ответы бота
-    const ANSWERS = {
-      about: `Наш университет основан в 1950 году. Мы предлагаем более 100 программ бакалавриата и магистратуры, активно участвуем в международных проектах и исследованиях. Наши выпускники востребованы на рынке труда и работают в ведущих компаниях мира.`,
-      faculties: `В нашем университете действуют следующие факультеты:\n
-1. Факультет инженерии и информационных технологий\n
-2. Факультет экономики и управления\n
-3. Факультет гуманитарных наук\n
-4. Физико-математический факультет\n
-5. Медицинский факультет\n`,
-      admission: `Условия поступления:\n
-• Бакалавриат: 9 классов + вступительные экзамены по профильным предметам.\n
-• Магистратура: диплом бакалавра + результаты вступительных испытаний или GRE/GMAT.\n
-• Иностранные студенты: знание русского или английского языка на уровне B2.\n
-• Срок подачи документов: с 1 июня по 15 августа.`,
-      contacts: `Контактная информация:\n
-Адрес: г. Москва, пр. Академика Королёва, д.12\n
-Телефон приёмной комиссии: +7 (495) 123-45-67\n
-E-mail: admissions@university.ru\n
-Время работы: Пн–Пт, 9:00–18:00 (МСК)`
-    };
+      // chat_id передаётся в параметры URL мини-приложения
+      const params  = new URLSearchParams(window.location.search);
+      const CHAT_ID = params.get('chat_id') || '';
 
-    // Универсальная функция: отправляет текст в чат MAX и показывает ответ локально
-    function handleQuestion(key) {
-      const textMap = {
-        about: 'Расскажите об университете',
+      // Предопределённые тексты
+      const TEXTS = {
+        about:     'Расскажите об университете',
         faculties: 'Какие есть факультеты',
         admission: 'Условия поступления',
-        contacts: 'Контактная информация университета'
+        contacts:  'Контактная информация университета'
       };
-      const userText = textMap[key];
-      const botReply = ANSWERS[key];
-      document.getElementById('response').textContent = 'Отправляем запрос в чат...';
 
-      // Отправка в чат через MAX SDK или postMessage
-      if (window.MAX && typeof MAX.sendMessage === 'function') {
-        MAX.sendMessage({ chat_id: CHAT_ID, text: userText });
-      } else {
-        window.parent.postMessage({ type: 'MAX_SEND_MESSAGE', chat_id: CHAT_ID, text: userText }, '*');
+      // Отправка сообщения в чат-бот
+      async function sendToChat(key) {
+        const respEl = document.getElementById('response');
+        const text   = TEXTS[key];
+        respEl.textContent = 'Отправляем запрос в чат...';
+
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Authorization': TOKEN
+            },
+            body: JSON.stringify({ chat_id: CHAT_ID, text })
+          });
+
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || res.statusText);
+          }
+
+          respEl.textContent = 'Запрос отправлен. Ответ придёт в чат-боте.';
+        } catch (err) {
+          respEl.textContent = 'Ошибка: ' + err.message;
+        }
       }
 
-      // Показ локального ответа (имитация ответа в чате)
-      setTimeout(() => {
-        document.getElementById('response').textContent = botReply;
-      }, 500);
-    }
-
-    // Привязываем кнопки к обработчику
-    document.getElementById('btn-about').addEventListener('click',     () => handleQuestion('about'));
-    document.getElementById('btn-faculties').addEventListener('click', () => handleQuestion('faculties'));
-    document.getElementById('btn-admission').addEventListener('click', () => handleQuestion('admission'));
-    document.getElementById('btn-contacts').addEventListener('click',  () => handleQuestion('contacts'));
+      // Навешиваем события на кнопки
+      document.getElementById('btn-about')    .addEventListener('click', () => sendToChat('about'));
+      document.getElementById('btn-faculties').addEventListener('click', () => sendToChat('faculties'));
+      document.getElementById('btn-admission').addEventListener('click', () => sendToChat('admission'));
+      document.getElementById('btn-contacts') .addEventListener('click', () => sendToChat('contacts'));
+    });
   </script>
 </body>
 </html>
