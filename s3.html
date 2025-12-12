@@ -29,15 +29,20 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // API и токен (только ASCII, без BOM и пробелов по краям)
-      const API_URL = 'platform-api.max.ru';
-      const TOKEN   = 'f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk';
+      // Полный URL эндпоинта и токен с префиксом Bearer
+      const API_URL = 'https://platform-api.max.ru/messages';
+      const TOKEN   = 'Bearer f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk';
 
-      // chat_id передаётся в параметры URL мини-приложения
-      const params  = new URLSearchParams(window.location.search);
-      const CHAT_ID = params.get('chat_id') || '';
+      // Извлекаем chat_id из URL
+      const params = new URLSearchParams(window.location.search);
+      const CHAT_ID = params.get('chat_id');
+      const respEl = document.getElementById('response');
+      if (!CHAT_ID) {
+        respEl.textContent = 'Ошибка: chat_id не передан в URL';
+        return;
+      }
 
-      // Предопределённые тексты
+      // Предопределённые тексты сообщений
       const TEXTS = {
         about:     'Расскажите об университете',
         faculties: 'Какие есть факультеты',
@@ -45,10 +50,8 @@
         contacts:  'Контактная информация университета'
       };
 
-      // Отправка сообщения в чат-бот
+      // Функция отправки сообщения
       async function sendToChat(key) {
-        const respEl = document.getElementById('response');
-        const text   = TEXTS[key];
         respEl.textContent = 'Отправляем запрос в чат...';
 
         try {
@@ -59,15 +62,18 @@
               'Content-Type': 'application/json; charset=utf-8',
               'Authorization': TOKEN
             },
-            body: JSON.stringify({ chat_id: CHAT_ID, text })
+            body: JSON.stringify({
+              chat_id: CHAT_ID,
+              text: TEXTS[key]
+            })
           });
 
           if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || res.statusText);
+            const errText = await res.text();
+            throw new Error(`Ошибка ${res.status}: ${errText}`);
           }
 
-          respEl.textContent = 'Запрос отправлен. Ответ придёт в чат-боте.';
+          respEl.textContent = 'Запрос отправлен. Ответ придёт в чате.';
         } catch (err) {
           respEl.textContent = 'Ошибка: ' + err.message;
         }
@@ -82,4 +88,3 @@
   </script>
 </body>
 </html>
-
