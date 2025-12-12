@@ -35,7 +35,7 @@
 
       // Извлекаем chat_id из URL
       const params = new URLSearchParams(window.location.search);
-      const CHAT_ID = params.get('chat_id');
+      const CHAT_ID = params.get('chat_id=9683068');
       const respEl = document.getElementById('response');
       if (!CHAT_ID) {
         respEl.textContent = 'Ошибка: chat_id не передан в URL';
@@ -88,3 +88,4 @@
   </script>
 </body>
 </html>
+
