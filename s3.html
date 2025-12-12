@@ -29,49 +29,62 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Фиксированный chat_id для локального тестирования
-      const CHAT_ID = '9683068';
-      const API_URL = 'https://platform-api.max.ru/messages';
-      const TOKEN   = 'Bearer f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exmMt8mgF0DdcVd7bVrC9kbp_lcaZDHahkqpMy6A72phAlvk';
-      const respEl  = document.getElementById('response');
+  const API_URL = 'https://platform-api.max.ru/messages';
+  const TOKEN   = 'Bearer f9LHodD0cOJ6YJ1wBe6O6ct1OdPM2jN9ao94exm…';
+  const respEl  = document.getElementById('response');
 
-      const TEXTS = {
-        about:     'Расскажите об университете',
-        faculties: 'Какие есть факультеты',
-        admission: 'Условия поступления',
-        contacts:  'Контактная информация университета'
-      };
+  // Извлекаем chat_id из URL (query или path)
+  const params = new URLSearchParams(window.location.search);
+  let chatId = params.get('chat_id');
+  if (!chatId) {
+    const segments = window.location.pathname.split('/').filter(Boolean);
+    chatId = segments.pop();
+  }
 
-      async function sendToChat(key) {
-        respEl.textContent = 'Отправляем запрос...';
-        try {
-          const res = await fetch(API_URL, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-              'Content-Type': 'application/json; charset=utf-8',
-              'Authorization': TOKEN
-            },
-            body: JSON.stringify({
-              chat_id: CHAT_ID,
-              text: TEXTS[key]
-            })
-          });
-          if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Ошибка ${res.status}: ${errText}`);
-          }
-          respEl.textContent = 'Запрос отправлен. Ответ придёт в чат.';
-        } catch (err) {
-          respEl.textContent = 'Ошибка: ' + err.message;
-        }
+  if (!chatId) {
+    respEl.textContent = 'Ошибка: chat_id не найден в URL';
+    return;
+  }
+
+  const TEXTS = {
+    about:     'Расскажите об университете',
+    faculties: 'Какие есть факультеты',
+    admission: 'Условия поступления',
+    contacts:  'Контактная информация университета'
+  };
+
+  async function sendToChat(key) {
+    respEl.textContent = 'Отправляем запрос...';
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': TOKEN
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: TEXTS[key]
+        })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Ошибка ${res.status}: ${errText}`);
       }
+      respEl.textContent = 'Запрос отправлен. Ответ придёт в чате.';
+    } catch (err) {
+      respEl.textContent = 'Ошибка: ' + err.message;
+    }
+  }
 
-      document.getElementById('btn-about')    .addEventListener('click', () => sendToChat('about'));
-      document.getElementById('btn-faculties').addEventListener('click', () => sendToChat('faculties'));
-      document.getElementById('btn-admission').addEventListener('click', () => sendToChat('admission'));
-      document.getElementById('btn-contacts') .addEventListener('click', () => sendToChat('contacts'));
+  document.getElementById('btn-about')    .addEventListener('click', () => sendToChat('about'));
+  document.getElementById('btn-faculties').addEventListener('click', () => sendToChat('faculties'));
+  document.getElementById('btn-admission').addEventListener('click', () => sendToChat('admission'));
+  document.getElementById('btn-contacts') .addEventListener('click', () => sendToChat('contacts'));
     });
   </script>
 </body>
 </html>
+
